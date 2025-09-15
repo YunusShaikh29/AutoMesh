@@ -1,0 +1,20 @@
+{
+  "name": "database",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "exports": {
+    "./client": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.0",
+    "openai": "^5.20.1",
+    "prisma": "^6.16.0",
+    "zod": "^4.1.7"
+  }
+}

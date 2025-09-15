@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Credentials {
+  email
+  telegram
+}
+
+
+model User {
+  id  String  @id @default(uuid()) @unique
+  name String?
+  email String  @unique
+  password String
+
+  workflows Workflow[]
+  credentials Credential[]
+  authTokens AuthToken[]
+}
+
+model Workflow {
+  id   String @id @default(uuid())
+  name String
+  description String?
+  active Boolean
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  nodes Json
+  connections Json
+
+  webhooks Webhook[]
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Webhook {
+  id String @id @default(uuid())
+  path String
+  method String
+
+  // headers Json?
+  // token String?
+  
+
+  workflowId String
+  workflow Workflow @relation(fields: [workflowId], references: [id])
+
+  @@unique([path, method])
+}
+
+
+model Credential {
+  id   String @id @default(uuid())
+  name String // A user-friendly name ie. "My Personal Telegram Bot".
+  type Credentials 
+
+  // field to hold the encrypted secret data.
+  // backend is responsible for encrypting the data before saving
+  // it here and decrypting it after fetching with maybe jwt or something else
+  data String
+
+  // a User can have many Credentials.
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuthToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+
+// model Node {
+//   id String @id @default(uuid())
+//   type NODE_TYPE //trigger or action
+
+//   name String 
+//   description String?
+
+//   workflowId String
+//   workflow Workflow @relation(fields: [workflowId], references: [id])
+
+//   triggerKind TRIGGER_KIND?
+//   actionKind ACTION_KIND?
+
+//   positionX Float
+//   positionY Float
+
+// }
+
