@@ -3,6 +3,7 @@ import { z } from 'zod';
 export enum NODE_TYPE {
   trigger = "trigger",
   action = "action",
+  tool = "tool"
 }
 export enum Credentials {
   email = "email",
@@ -17,6 +18,16 @@ export enum TRIGGER_KIND {
 export enum ACTION_KIND {
   telegram = "telegram",
   email = "email",
+  aiAgent = "aiAgent",
+}
+
+export enum TOOL_KIND {
+  add = "add",
+  multiply = "multiply",
+  power = "power",
+
+  fetchWeather = "fetchWeather",
+  fetchCryptoPrice = "fetchCryptoPrice",
 }
 
 export interface Parameters {
@@ -49,16 +60,16 @@ export type Node = ActionNode | TriggerNode;
 export type Nodes = Node[];
 
 
-export interface ConnectionTarget {
-    node: string            //the node which we have to connect to
-    input: string           //the input of the node which we have to connect to eg. main,
-}
+// export interface ConnectionTarget {
+//     node: string            //the node which we have to connect to
+//     input: string           //the input of the node which we have to connect to eg. main,
+// }
 
-export type Connections = {
-    [sourceNodeName: string]: {
-        [outputName: string]: ConnectionTarget[] //outputName is the name of the output of the source node eg. main, error, etc.
-    }
-}
+// export type Connections = {
+//     [sourceNodeName: string]: {
+//         [outputName: string]: ConnectionTarget[] //outputName is the name of the output of the source node eg. main, error, etc.
+//     }
+// }
 
 // export interface Connection {
 //   source: {
@@ -134,9 +145,15 @@ const actionNodeSchema = baseNodeSchema.extend({
   kind: z.enum(Object.values(ACTION_KIND) as [string, ...string[]]),
 });
 
-const nodeSchema = z.discriminatedUnion('type', [
+const toolNodeSchema = baseNodeSchema.extend({
+  type: z.literal(NODE_TYPE.tool),
+  kind: z.enum(Object.values(TOOL_KIND) as [string, ...string[]]),
+});
+
+const nodeSchema = z.discriminatedUnion("type", [
   triggerNodeSchema,
   actionNodeSchema,
+  toolNodeSchema,
 ]);
 
 // dropped schema

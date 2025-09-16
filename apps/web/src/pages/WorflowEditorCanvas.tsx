@@ -19,16 +19,17 @@ import ReactFlow, {
   addEdge,
   applyEdgeChanges,
 } from "reactflow";
-import { NODE_TYPE, TRIGGER_KIND } from "common/types";
+import { ACTION_KIND, NODE_TYPE, TRIGGER_KIND } from "common/types";
 import { v4 as uuidv4 } from "uuid";
 import { CustomNode } from "../components/CustomNode";
+import { SettingsPanel } from "../components/SettingsPanel";
 
 type Workflow = z.infer<typeof createWorkflowBodySchema> & {
   id: string;
   active: boolean;
 };
 
-type AppNode = Workflow["nodes"][number];
+export type AppNode = Workflow["nodes"][number];
 type AppConnection = Workflow["connections"][number];
 
 // Register our custom node type with React Flow
@@ -44,6 +45,8 @@ const WorkflowEditorCanvas = () => {
 
   const [rfNodes, setRfNodes] = useState<ReactFlowNode[]>([]);
   const [rfEdges, setRfEdges] = useState<ReactFlowEdge[]>([]); // edges are our connections in the workflow db, reactflow expects an array of edges
+
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchworkflow = async () => {
@@ -91,7 +94,7 @@ const WorkflowEditorCanvas = () => {
       const response = await axios.put(`/api/v0/workflows/${id}`, workflow);
       console.log(response.data);
     } catch (error: any) {
-      console.error(error.response?.data?.message || "An error occurred");
+      console.error(error.response.data.error || "An error occurred");
     } finally {
       setIsLaoding(false);
     }
@@ -103,6 +106,7 @@ const WorkflowEditorCanvas = () => {
       name: "Webhook Trigger",
       type: NODE_TYPE.trigger,
       kind: TRIGGER_KIND.webhook,
+      //   data: { label: "Webhook Trigger" },
       position: { x: 100, y: 100 },
       description: "A webhook trigger",
       disabled: false,
@@ -113,6 +117,27 @@ const WorkflowEditorCanvas = () => {
       return {
         ...prevWorkflow,
         nodes: [...prevWorkflow.nodes, newNode],
+      };
+    });
+  };
+
+  const handleAddAIAgentNode = () => {
+    const newAIAgentNode: AppNode = {
+      id: uuidv4(),
+      name: "AI Agent",
+      type: NODE_TYPE.action,
+      kind: ACTION_KIND.aiAgent,
+      position: { x: 200, y: 250 },
+      //   data: { label: "AI Agent" },
+      description: "An AI Agent",
+      disabled: false,
+      parameters: {},
+    };
+    setWorkflow((prevWorkflow) => {
+      if (!prevWorkflow) return;
+      return {
+        ...prevWorkflow,
+        nodes: [...prevWorkflow.nodes, newAIAgentNode],
       };
     });
   };
@@ -192,6 +217,36 @@ const WorkflowEditorCanvas = () => {
     [setWorkflow]
   );
 
+  const handleOnNodeClick = useCallback(
+    (_: any, node: ReactFlowNode) => {
+      setSelectedNodeId(node.id);
+    },
+    []
+  );
+
+  const handOnPaneClick = () => {
+    setSelectedNodeId(null);
+  };
+
+  //will pass this to settings panel
+  const handleNodeChange = useCallback((updatedNode: AppNode) => {
+    setWorkflow((prevWorkflow) => {
+        if (!prevWorkflow) return;
+        const updatedNodes = prevWorkflow.nodes.map((node) => {
+          if (node.id === updatedNode.id) {
+            return updatedNode;
+          }
+          return node;
+        });
+        return {
+            ...prevWorkflow,
+            nodes: updatedNodes,
+        };
+    });
+  }, [setWorkflow]);
+
+  const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -225,23 +280,34 @@ const WorkflowEditorCanvas = () => {
             onClick={handleAddNode}
             className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
           >
-            Add Webhook Trigger Node
+            Webhook
+          </button>
+          <button
+            onClick={handleAddAIAgentNode}
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          >
+            AI Agent
           </button>
         </div>
       </div>
-      <div className="h-[80vh] w-full">
-        <ReactFlow
-          nodes={rfNodes}
-          edges={rfEdges}
-          nodeTypes={nodeTypes}
-          onNodesChange={handleOnNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={handleOnConnect}
-          className="border-2 border-gray-300"
-        >
-          <Background className="text-white bg-gray-900" />
-          <Controls />
-        </ReactFlow>
+      <div className="flex justify-center">
+        <div className="h-[80vh] w-full">
+          <ReactFlow
+            nodes={rfNodes}
+            edges={rfEdges}
+            nodeTypes={nodeTypes}
+            onNodeClick={handleOnNodeClick}
+            onNodesChange={handleOnNodesChange}
+            onConnect={handleOnConnect}
+            onEdgesChange={onEdgesChange}
+            onPaneClick={handOnPaneClick}
+            className="border-2 border-gray-300"
+          >
+            <Background className="text-white bg-gray-900" />
+            <Controls />
+          </ReactFlow>
+        </div>
+        {selectedNode && <SettingsPanel selectedNode={selectedNode} onNodeChange={handleNodeChange}/>}
       </div>
     </div>
   );
