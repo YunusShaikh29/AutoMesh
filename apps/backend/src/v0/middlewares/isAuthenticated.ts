@@ -29,7 +29,7 @@ export const isAuthenticated = async (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "");
-    console.log(decoded);
+    // console.log(decoded);
     const user = await prisma.user.findUnique({
       where: {
         //@ts-ignore

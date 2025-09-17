@@ -122,8 +122,32 @@ export type Nodes = Node[];
 }
 */
 
-// Zod Schemas for Validation
-const parameterSchema = z.object();
+const webhookParametersSchema = z.object({
+});
+
+const aiAgentParametersSchema = z.object({
+  model: z.string().optional().default("gpt-4o-mini"),
+  prompt: z.string().optional().default(""),
+});
+
+const telegramParametersSchema = z.object({
+  chatId: z.string().optional().default(""),
+  message: z.string().optional().default(""),
+});
+
+const emailParametersSchema = z.object({
+    to: z.string().optional().default(""),
+    subject: z.string().optional().default(""),
+    body: z.string().optional().default(""),
+});
+
+
+const parameterSchema = z.union([
+  webhookParametersSchema,
+  aiAgentParametersSchema,
+  telegramParametersSchema,
+  emailParametersSchema,
+]);
 
 const baseNodeSchema = z.object({
   id: z.string(),
@@ -135,26 +159,46 @@ const baseNodeSchema = z.object({
   parameters: parameterSchema.optional(),
 });
 
-const triggerNodeSchema = baseNodeSchema.extend({
+export const webhookTriggerNodeSchema = baseNodeSchema.extend({
   type: z.literal(NODE_TYPE.trigger),
-  kind: z.enum(Object.values(TRIGGER_KIND) as [string, ...string[]]),
+  kind: z.literal(TRIGGER_KIND.webhook),
+  parameters: webhookParametersSchema.optional(),
 });
 
-const actionNodeSchema = baseNodeSchema.extend({
+export const manualTriggerNodeSchema = baseNodeSchema.extend({
+  type: z.literal(NODE_TYPE.trigger),
+  kind: z.literal(TRIGGER_KIND.manual),
+  parameters: z.object({}).optional(), 
+});
+
+export const aiAgentActionNodeSchema = baseNodeSchema.extend({
   type: z.literal(NODE_TYPE.action),
-  kind: z.enum(Object.values(ACTION_KIND) as [string, ...string[]]),
+  kind: z.literal(ACTION_KIND.aiAgent),
+  parameters: aiAgentParametersSchema.optional(),
 });
 
-const toolNodeSchema = baseNodeSchema.extend({
-  type: z.literal(NODE_TYPE.tool),
-  kind: z.enum(Object.values(TOOL_KIND) as [string, ...string[]]),
+export const telegramActionNodeSchema = baseNodeSchema.extend({
+  type: z.literal(NODE_TYPE.action),
+  kind: z.literal(ACTION_KIND.telegram),
+  parameters: telegramParametersSchema.optional(),
 });
 
-const nodeSchema = z.discriminatedUnion("type", [
-  triggerNodeSchema,
-  actionNodeSchema,
-  toolNodeSchema,
+export const emailActionNodeSchema = baseNodeSchema.extend({
+    type: z.literal(NODE_TYPE.action),
+    kind: z.literal(ACTION_KIND.email),
+    parameters: emailParametersSchema.optional(),
+});
+
+
+
+export const nodeSchema = z.discriminatedUnion("kind", [
+    webhookTriggerNodeSchema,
+    manualTriggerNodeSchema,
+    aiAgentActionNodeSchema,
+    telegramActionNodeSchema,
+    emailActionNodeSchema,
 ]);
+
 
 // dropped schema
 // const connectionTargetSchema = z.object({

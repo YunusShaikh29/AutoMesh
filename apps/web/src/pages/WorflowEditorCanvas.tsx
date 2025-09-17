@@ -19,7 +19,12 @@ import ReactFlow, {
   addEdge,
   applyEdgeChanges,
 } from "reactflow";
-import { ACTION_KIND, NODE_TYPE, TRIGGER_KIND } from "common/types";
+import {
+  ACTION_KIND,
+  NODE_TYPE,
+  TRIGGER_KIND,
+  type nodeSchema,
+} from "common/types";
 import { v4 as uuidv4 } from "uuid";
 import { CustomNode } from "../components/CustomNode";
 import { SettingsPanel } from "../components/SettingsPanel";
@@ -29,7 +34,7 @@ type Workflow = z.infer<typeof createWorkflowBodySchema> & {
   active: boolean;
 };
 
-export type AppNode = Workflow["nodes"][number];
+export type AppNode = z.infer<typeof nodeSchema>;
 type AppConnection = Workflow["connections"][number];
 
 // Register our custom node type with React Flow
@@ -47,6 +52,32 @@ const WorkflowEditorCanvas = () => {
   const [rfEdges, setRfEdges] = useState<ReactFlowEdge[]>([]); // edges are our connections in the workflow db, reactflow expects an array of edges
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      setWorkflow((currentWorkflow) => {
+        if (!currentWorkflow) return currentWorkflow;
+
+        // Also deselect the node if it was selected
+        if (selectedNodeId === nodeId) {
+          setSelectedNodeId(null);
+        }
+
+        const updatedNodes = currentWorkflow.nodes.filter(
+          (node) => node.id !== nodeId
+        );
+        const updatedConnections = currentWorkflow.connections.filter(
+          (conn) => conn.source !== nodeId && conn.target !== nodeId
+        );
+        return {
+          ...currentWorkflow,
+          nodes: updatedNodes,
+          connections: updatedConnections,
+        };
+      });
+    },
+    [setWorkflow, selectedNodeId]
+  );
 
   useEffect(() => {
     const fetchworkflow = async () => {
@@ -68,7 +99,7 @@ const WorkflowEditorCanvas = () => {
       const transformNodes = workflow.nodes.map((node) => ({
         id: node.id,
         position: node.position,
-        data: { label: node.name },
+        data: { label: node.name, onDelete: handleDeleteNode },
         type: "custom",
       }));
       setRfNodes(transformNodes);
@@ -78,7 +109,7 @@ const WorkflowEditorCanvas = () => {
     } else {
       setRfEdges([]);
     }
-  }, [workflow]);
+  }, [workflow, handleDeleteNode]);
 
   const handleWorkflowNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -106,7 +137,6 @@ const WorkflowEditorCanvas = () => {
       name: "Webhook Trigger",
       type: NODE_TYPE.trigger,
       kind: TRIGGER_KIND.webhook,
-      //   data: { label: "Webhook Trigger" },
       position: { x: 100, y: 100 },
       description: "A webhook trigger",
       disabled: false,
@@ -128,10 +158,12 @@ const WorkflowEditorCanvas = () => {
       type: NODE_TYPE.action,
       kind: ACTION_KIND.aiAgent,
       position: { x: 200, y: 250 },
-      //   data: { label: "AI Agent" },
       description: "An AI Agent",
       disabled: false,
-      parameters: {},
+      parameters: {
+        model: "gpt-4o-mini",
+        prompt: "",
+      },
     };
     setWorkflow((prevWorkflow) => {
       if (!prevWorkflow) return;
@@ -169,11 +201,12 @@ const WorkflowEditorCanvas = () => {
 
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
-      // Your logic to delete edges will go here.
-      console.log("Edge changes:", changes);
+      setRfEdges((currentRfEdges) => applyEdgeChanges(changes, currentRfEdges));
     },
-    [setWorkflow]
+    []
   );
+
+ 
 
   //this gets called when we move the nodes around
   const handleOnNodesChange: OnNodesChange = useCallback(
@@ -190,11 +223,6 @@ const WorkflowEditorCanvas = () => {
           const finishedNode = updatedRfNodes.find(
             (node) => node.id === dragStopChange.id
           );
-
-          console.log("changes", changes);
-          console.log("updatedRfNodes", updatedRfNodes);
-          console.log("dragStopChange", dragStopChange);
-          console.log("finishedNode", finishedNode);
 
           if (finishedNode) {
             setWorkflow((currentWorkFlow) => {
@@ -234,7 +262,7 @@ const WorkflowEditorCanvas = () => {
         if (!prevWorkflow) return;
         const updatedNodes = prevWorkflow.nodes.map((node) => {
           if (node.id === updatedNode.id) {
-            return updatedNode;
+            return {...updatedNode};
           }
           return node;
         });
@@ -243,9 +271,10 @@ const WorkflowEditorCanvas = () => {
             nodes: updatedNodes,
         };
     });
-  }, [setWorkflow]);
+}, [setWorkflow]);
 
-  const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
+// console.log("all of the workflow", workflow)
+const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
 
   if (isLoading) {
     return <div>Loading...</div>;

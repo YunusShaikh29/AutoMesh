@@ -1,10 +1,6 @@
 import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
 
-const openai_api_key =
-  process.env.OPENAI_API_KEY || "";
-// First calculate 3 + 4, then multiply the result by 2, then raise it to the power of 2
+const openai_api_key = process.env.OPENAI_API_KEY || "";
 
 function sum(a: number, b: number) {
   return a + b;
@@ -27,7 +23,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "sum",
-      description: "Takes two number inputs and returns the sum of them.",
+      description: "Takes two numbers and returns their sum.",
       parameters: {
         type: "object",
         properties: {
@@ -41,7 +37,7 @@ const tools = [
           },
         },
         required: ["a", "b"],
-        additionalProperties: false, // Fixes the error
+        additionalProperties: false,
       },
       strict: true,
     },
@@ -50,8 +46,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "multiply",
-      description:
-        "Takes two number inputs and returns the multiplied value of them.",
+      description: "Takes two numbers and returns their product (multiplication).",
       parameters: {
         type: "object",
         properties: {
@@ -65,7 +60,7 @@ const tools = [
           },
         },
         required: ["a", "b"],
-        additionalProperties: false, // Fixes the error
+        additionalProperties: false,
       },
       strict: true,
     },
@@ -74,22 +69,21 @@ const tools = [
     type: "function" as const,
     function: {
       name: "power",
-      description:
-        "Takes two number inputs first number is the base and second number is the power.",
+      description: "Takes two numbers and raises the first (base) to the power of the second (exponent).",
       parameters: {
         type: "object",
         properties: {
           a: {
             type: "number",
-            description: "The first number which is base.",
+            description: "The base number.",
           },
           b: {
             type: "number",
-            description: "The second number which is power.",
+            description: "The exponent to raise the base to.",
           },
         },
         required: ["a", "b"],
-        additionalProperties: false, // Fixes the error
+        additionalProperties: false,
       },
       strict: true,
     },
@@ -97,63 +91,59 @@ const tools = [
 ];
 
 async function openAIFunctionCall(input: string) {
-  const messages = [
-    {
-      role: "system",
-      content:
-        "You are a helpful assistant that can call functions and help user",
+  let messages = [
+    { 
+      role: "system", 
+      content: "You are a helpful assistant that can call functions to perform calculations step by step. Use tools one at a time if results depend on previous steps." 
     },
-    {
-      role: "user",
-      content: input,
-    },
+    { role: "user", content: input },
   ];
 
-  const response = await openai.chat.completions.create({
-    messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant that can call functions and help user",
-        },
-        {
-          role: "user",
-          content: input,
-        },
-      ],
-    model: "gpt-4o-mini",
-    tools: tools,
-    max_completion_tokens: 1000,
-  });
+  const maxIterations = 10;  
+  for (let i = 0; i < maxIterations; i++) {
+    // Call API with current messages and tools
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      tools,
+      max_completion_tokens: 1000,
+    });
 
-  const message = response.choices[0]?.message;
+    const message = response.choices[0]?.message;
+    if (!message) {
+      console.error("No message in response");
+      return response;
+    }
 
-  if (!message) {
-    console.error("No message in response");
-    return response;
-  }
+    messages.push(message);
 
-  const toolResponses = [];
+    if (!message.tool_calls || message.tool_calls.length === 0) {
+      console.log("Final response:", message.content);
+      return response;
+    }
 
-  if (message.tool_calls && message.tool_calls.length > 0) {
+    const toolResponses = [];
     for (const tool of message.tool_calls) {
       let toolResult;
       if (tool.type === "function") {
-        console.log(
-          `Function Name: ${tool.function.name}, Args: ${tool.function.arguments}`
-        );
-        const args = JSON.parse(tool.function.arguments);
-        switch (tool.function.name) {
-          case "sum":
-            toolResult = sum(args?.a, args?.b);
-            break;
-          case "multiply":
-            toolResult = multiply(args?.a, args?.b);
-            break;
-          case "power":
-            toolResult = power(args?.a, args?.b);
-            break;
-          default:
-            toolResult = "Unknown function";
+        console.log(`Function Name: ${tool.function.name}, Args: ${tool.function.arguments}`);
+        try {
+          const args = JSON.parse(tool.function.arguments);
+          switch (tool.function.name) {
+            case "sum":
+              toolResult = sum(args.a, args.b);
+              break;
+            case "multiply":
+              toolResult = multiply(args.a, args.b);
+              break;
+            case "power":
+              toolResult = power(args.a, args.b);
+              break;
+            default:
+              toolResult = "Unknown function";
+          }
+        } catch (error: any) {
+          toolResult = `Error executing tool: ${error.message}`;
         }
       } else {
         toolResult = "Unknown tool type";
@@ -166,30 +156,12 @@ async function openAIFunctionCall(input: string) {
       });
     }
 
-    const finalResult = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant that can call functions and help user",
-        },
-        { role: "user", content: input }, // Use dynamic input
-        message,
-        ...toolResponses,
-      ],
-      max_completion_tokens: 1000,
-    });
-
-    console.log("Final response:", finalResult?.choices[0]?.message.content);
-    return finalResult;
-  } else {
-    console.log("Direct response:", message?.content);
-    return response;
+    messages.push(...toolResponses);
   }
+
+  console.error("Max iterations reached—possible loop detected");
+  return null;
 }
 
-const response = await openAIFunctionCall(
-  "First calculate 3 + 4, then multiply the result by 2, then raise it to the power of 2"
-);
-// console.log(response);
+const response = await openAIFunctionCall("First calculate 3 + 4, then multiply the result by 2, then raise it to the power of 2");
+console.log(response);
