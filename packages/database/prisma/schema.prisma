@@ -21,6 +21,12 @@ enum Credentials {
   telegram
 }
 
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
 
 model User {
   id  String  @id @default(uuid()) @unique
@@ -46,6 +52,7 @@ model Workflow {
   connections Json
 
   webhooks Webhook[]
+  executions Execution[]
 
 
   createdAt DateTime @default(now())
@@ -63,7 +70,7 @@ model Webhook {
   
 
   workflowId String
-  workflow Workflow @relation(fields: [workflowId], references: [id])
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@unique([path, method])
 }
@@ -74,9 +81,7 @@ model Credential {
   name String // A user-friendly name ie. "My Personal Telegram Bot".
   type Credentials 
 
-  // field to hold the encrypted secret data.
-  // backend is responsible for encrypting the data before saving
-  // it here and decrypting it after fetching with maybe jwt or something else
+  
   data String
 
   // a User can have many Credentials.
@@ -92,6 +97,44 @@ model AuthToken {
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
+}
+
+
+model Execution {
+  id String @id @default(uuid())
+
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowId String
+
+  // Snapshot of the workflow at the time of execution
+  nodes       Json
+  connections Json
+
+  status      ExecutionStatus @default(PENDING)
+  trigger     String 
+  output      Json? 
+  error       String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  logs ExecutionLog[]
+}
+
+model ExecutionLog {
+  id String @id @default(uuid())
+
+  execution   Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId String
+
+  nodeId      String // The ID of the node from the `nodes` JSON
+  nodeName    String // The name of the node for easier display
+  status      ExecutionStatus
+  inputData   Json?
+  outputData  Json?
+  error       String?
+  
+  timestamp DateTime @default(now())
 }
 
 

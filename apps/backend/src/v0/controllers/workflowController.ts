@@ -163,3 +163,62 @@ export const updateWorkflow = async (
     });
   }
 };
+
+export const executeWorkflow = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ error: "User not authenticated" });
+  }
+
+  const workflowId = req.params.id;
+  if (!workflowId) {
+    return res.status(400).json({ error: "Workflow ID is required" });
+  }
+  
+  try {
+    const workflow = await prisma.workflow.findUnique({
+      where: { id: workflowId, userId },
+    });
+
+    if (!workflow) {
+      return res.status(404).json({ error: "Workflow not found" });
+    }
+
+    if (!workflow.active) {
+      return res.status(400).json({ error: "Workflow is not active" });
+    }
+    
+    const execution = await prisma.execution.create({
+      data: {
+        workflowId,
+        nodes: workflow.nodes as Prisma.InputJsonValue,
+        connections: workflow.connections as Prisma.InputJsonValue,
+        trigger: "manual",
+        status: "PENDING"
+      },
+      select: {
+        id: true,
+        status: true,
+        trigger: true,
+        startedAt: true,
+        workflowId: true
+      }
+    });
+
+    res.status(201).json({ 
+      message: "Workflow execution queued successfully",
+      execution 
+    });
+
+  } catch (error) {
+    console.error("Failed to execute workflow:", error);
+    res.status(500).json({
+      error: "An internal error occurred while executing the workflow.",
+    });
+  }
+};
