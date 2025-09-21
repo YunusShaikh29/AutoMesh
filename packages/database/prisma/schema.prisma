@@ -16,18 +16,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Credentials {
-  email
-  telegram
-}
-
-enum ExecutionStatus {
-  PENDING
-  RUNNING
-  COMPLETED
-  FAILED
-}
-
 model User {
   id  String  @id @default(uuid()) @unique
   name String?
@@ -77,16 +65,16 @@ model Webhook {
 
 
 model Credential {
-  id   String @id @default(uuid())
-  name String // A user-friendly name ie. "My Personal Telegram Bot".
-  type Credentials 
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      String
+  data      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  
-  data String
-
-  // a User can have many Credentials.
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, name])
 }
 
 model AuthToken {
@@ -137,6 +125,13 @@ model ExecutionLog {
   timestamp DateTime @default(now())
 }
 
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
 
 // model Node {
 //   id String @id @default(uuid())

@@ -2,7 +2,7 @@ import { type NextFunction, type Response } from "express";
 import { type AuthRequest } from "../middlewares/isAuthenticated";
 import { prisma } from "database/client";
 import { createCredentialBodySchema } from "common/types";
-import { encrypt } from "../../lib/encryption";
+import { encrypt } from "common/encryption";
 import { ZodError } from "zod";
 
 export const createCredential = async (req: AuthRequest, res: Response) => {
@@ -16,6 +16,8 @@ export const createCredential = async (req: AuthRequest, res: Response) => {
   try {
     const { name, type, data } = createCredentialBodySchema.parse(req.body);
 
+    console.log("data", data)
+
     const credentialExists = await prisma.credential.findFirst({
       where: { userId, name },
     });
@@ -26,6 +28,8 @@ export const createCredential = async (req: AuthRequest, res: Response) => {
     }
 
     const encryptedData = encrypt(JSON.stringify(data));
+    
+    console.log("encryptedData", encryptedData)
 
     const newCredential = await prisma.credential.create({
       data: {
@@ -66,22 +70,20 @@ export const getCredentials = async (
       .json({ error: "Unauthorized: User not authenticated" });
   }
 
-  const credentialId = req.params.id;
-  if (!credentialId) {
-    return res.status(400).json({ error: "Credential ID is required" });
-  }
   try {
-    const credential = await prisma.credential.findUnique({
-      where: { id: credentialId, userId },
+    const credentials = await prisma.credential.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+      },
     });
-    if (!credential) {
-      return res.status(404).json({ error: "Credential not found" });
-    }
-    res.status(200).json({ credential });
+    res.status(200).json(credentials);
   } catch (error) {
-    console.error("Failed to get credential:", error);
+    console.error("Failed to get credentials:", error);
     res.status(500).json({
-      error: "An internal error occurred while getting the credential",
+      error: "An internal error occurred while getting the credentials",
     });
   }
 };

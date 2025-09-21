@@ -1,4 +1,15 @@
 import crypto from 'crypto';
+import dotenv from "dotenv"
+
+dotenv.config()
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+if (!ENCRYPTION_KEY) {
+  throw new Error(
+    'ENCRYPTION_KEY is not set inyour .env file.'
+  );
+}
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
@@ -8,7 +19,7 @@ const KEY_LENGTH = 32;
 
 const getKey = (salt: Buffer) => {
   return crypto.pbkdf2Sync(
-    process.env.ENCRYPTION_KEY!,
+    ENCRYPTION_KEY,
     salt,
     100000,
     KEY_LENGTH,
@@ -39,6 +50,11 @@ export const decrypt = (encryptedText: string) => {
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
 
-  return decipher.update(encrypted, 'utf8', 'utf8') + decipher.final('utf8');
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final(),
+  ]);
+
+  return decrypted.toString('utf8');
 };
 

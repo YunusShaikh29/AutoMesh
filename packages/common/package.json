@@ -7,9 +7,13 @@
     "@types/bun": "latest"
   },
   "exports": {
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./encryption": "./src/encryption.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2"
   }
 }

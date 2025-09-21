@@ -8,6 +8,12 @@ import {
   ACTION_KIND,
 } from "common/types";
 
+import { decrypt } from "common/encryption";
+import { executeLLM } from "./utils/langchain";
+import { resolveParameters } from "./utils/interpolation";
+import { sendTelegramMessage } from "./utils/telegram";
+import { sendEmail } from "./utils/email";
+
 const EXECUTION_POLLING_INTERVAL = 5000;
 
 interface ExecutionWithWorkflow
@@ -18,6 +24,23 @@ interface ExecutionWithWorkflow
 type AppNode = z.infer<typeof nodeSchema>;
 type Connection = z.infer<typeof connectionSchema>;
 
+const getCredential = async (credentialId: string, userId: string) => {
+  const encryptedCredential = await prisma.credential.findUnique({
+    where: {
+      id: credentialId,
+      userId,
+    },
+  });
+
+  if (!encryptedCredential) {
+    throw new Error("Credential not found.");
+  }
+  const decryptedCredential = decrypt(encryptedCredential.data);
+  return decryptedCredential;
+};
+
+const nodeOutputs: { [nodeId: string]: any } = {};
+
 const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
   console.log(
     `Executing workflow ${execution.workflowId} (Execution ID: ${execution.id})`
@@ -25,7 +48,6 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
 
   const nodes = execution.nodes as AppNode[];
   const connections = execution.connections as Connection[];
-  const nodeOutputs: { [nodeId: string]: any } = {};
   let lastNodeOutput: any = null;
 
   try {
@@ -74,27 +96,100 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
     );
 
     while (executionQueue.length > 0) {
-      const currentNode = executionQueue.shift();
+      const currentNode = executionQueue.shift(); //get the first node
       if (!currentNode) continue;
 
       try {
         console.log(`Executing node: ${currentNode.name}`);
+
+        // resolve the parameters for example {{aiAgentNode.result}} will be replaced with the result of the aiAgentNode
+        const resolvedParameters = resolveParameters({
+          parameters: currentNode.parameters || {},
+          nodeOutputs,
+        });
+
+        const nodeToExecute = {
+          ...currentNode,
+          parameters: resolvedParameters,
+        };
+
         const connectionsToCurrentNode = connections.filter(
-          (conn) => conn.target === currentNode?.id
+          (conn) => conn.target === nodeToExecute?.id
         );
         const prevNodesData = connectionsToCurrentNode.map(
           (conn) => nodeOutputs[conn.source]
         );
 
         let output: any = {};
-        switch (currentNode?.kind) {
-          case ACTION_KIND.aiAgent:
-            output = {
-              result: `Ai agent processed with input: ${prevNodesData}`,
-            };
+        switch (nodeToExecute?.kind) {
+          case ACTION_KIND.aiAgent: {
+            const {
+              credentialId = "",
+              model: modelName = "gpt-4o-mini",
+              prompt = "",
+            } = nodeToExecute.parameters || {};
+
+            const credential = await getCredential(
+              credentialId,
+              execution.workflow.userId
+            );
+
+            const { apiKey } = JSON.parse(credential);
+
+            output = await executeLLM({
+              modelName,
+              prompt,
+              apiKey,
+            });
             break;
+          }
+
+          case ACTION_KIND.telegram: {
+            const {
+              credentialId = "",
+              chatId = "",
+              message = "",
+            } = nodeToExecute.parameters || {};
+
+            const credential = await getCredential(
+              credentialId,
+              execution.workflow.userId
+            );
+            const { botToken } = JSON.parse(credential);
+
+            output = await sendTelegramMessage({
+              botToken,
+              chatId,
+              message,
+            });
+            break;
+          }
+
+          case ACTION_KIND.email: {
+            const {
+              credentialId = "",
+              to = "",
+              subject = "",
+              body = "",
+            } = nodeToExecute.parameters || {};
+
+            const credential = await getCredential(
+              credentialId,
+              execution.workflow.userId
+            );
+            const { apiKey } = JSON.parse(credential);
+
+            output = await sendEmail({
+              apiKey,
+              to,
+              subject,
+              body,
+            });
+            break;
+          }
+
           default:
-            console.warn(`Node kind ${currentNode?.kind} is not supported.`);
+            console.warn(`Node kind ${nodeToExecute?.kind} is not supported.`);
             output = { message: "Action not supported." };
         }
         nodeOutputs[currentNode.id] = output;

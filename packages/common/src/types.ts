@@ -1,13 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export enum NODE_TYPE {
   trigger = "trigger",
   action = "action",
-  tool = "tool"
+  tool = "tool",
 }
-export enum Credentials {
+export enum CREDENTIAL_TYPE {
   email = "email",
   telegram = "telegram",
+  openai = "openai",
 }
 
 export enum TRIGGER_KIND {
@@ -32,13 +33,13 @@ export enum TOOL_KIND {
 
 export interface Parameters {
   // [key: string]: string | number | boolean | object;
-  [key: string]: any
+  [key: string]: any;
 }
 
 export interface BaseNode {
   id: string;
   name: string;
-  description?: string
+  description?: string;
   position: [number, number];
   disabled?: boolean;
   parameters?: Parameters;
@@ -56,9 +57,7 @@ export interface ActionNode extends BaseNode {
 
 export type Node = ActionNode | TriggerNode;
 
-
 export type Nodes = Node[];
-
 
 // export interface ConnectionTarget {
 //     node: string            //the node which we have to connect to
@@ -73,7 +72,7 @@ export type Nodes = Node[];
 
 // export interface Connection {
 //   source: {
-//     node: string; 
+//     node: string;
 //     outputName: string; // e.g., "main"
 //   };
 //   target: {
@@ -83,12 +82,6 @@ export type Nodes = Node[];
 // }
 
 // export type Connections = Connection[];
-
-
-
-
-
-
 
 // export type Connections
 
@@ -122,12 +115,12 @@ export type Nodes = Node[];
 }
 */
 
-const webhookParametersSchema = z.object({
-});
+const webhookParametersSchema = z.object({});
 
 const aiAgentParametersSchema = z.object({
   model: z.string().optional().default("gpt-4o-mini"),
   prompt: z.string().optional().default(""),
+  credentialId: z.string().optional().default(""),
 });
 
 const telegramParametersSchema = z.object({
@@ -136,11 +129,10 @@ const telegramParametersSchema = z.object({
 });
 
 const emailParametersSchema = z.object({
-    to: z.string().optional().default(""),
-    subject: z.string().optional().default(""),
-    body: z.string().optional().default(""),
+  to: z.string().optional().default(""),
+  subject: z.string().optional().default(""),
+  body: z.string().optional().default(""),
 });
-
 
 const parameterSchema = z.union([
   webhookParametersSchema,
@@ -153,7 +145,7 @@ const baseNodeSchema = z.object({
   id: z.string(),
   name: z.string(), // No longer needed at the top level/
   description: z.string().optional(),
-  position: z.object({x: z.number(), y: z.number()}),
+  position: z.object({ x: z.number(), y: z.number() }),
   // data: z.object({label: z.string()}).optional(), //was using for reactflow's node structure.
   disabled: z.boolean().optional(),
   parameters: parameterSchema.optional(),
@@ -168,7 +160,7 @@ export const webhookTriggerNodeSchema = baseNodeSchema.extend({
 export const manualTriggerNodeSchema = baseNodeSchema.extend({
   type: z.literal(NODE_TYPE.trigger),
   kind: z.literal(TRIGGER_KIND.manual),
-  parameters: z.object({}).optional(), 
+  parameters: z.object({}).optional(),
 });
 
 export const aiAgentActionNodeSchema = baseNodeSchema.extend({
@@ -184,21 +176,18 @@ export const telegramActionNodeSchema = baseNodeSchema.extend({
 });
 
 export const emailActionNodeSchema = baseNodeSchema.extend({
-    type: z.literal(NODE_TYPE.action),
-    kind: z.literal(ACTION_KIND.email),
-    parameters: emailParametersSchema.optional(),
+  type: z.literal(NODE_TYPE.action),
+  kind: z.literal(ACTION_KIND.email),
+  parameters: emailParametersSchema.optional(),
 });
 
-
-
 export const nodeSchema = z.discriminatedUnion("kind", [
-    webhookTriggerNodeSchema,
-    manualTriggerNodeSchema,
-    aiAgentActionNodeSchema,
-    telegramActionNodeSchema,
-    emailActionNodeSchema,
+  webhookTriggerNodeSchema,
+  manualTriggerNodeSchema,
+  aiAgentActionNodeSchema,
+  telegramActionNodeSchema,
+  emailActionNodeSchema,
 ]);
-
 
 // dropped schema
 // const connectionTargetSchema = z.object({
@@ -206,9 +195,9 @@ export const nodeSchema = z.discriminatedUnion("kind", [
 //   input: z.string(),
 // });
 
-// const connectionsSchema = z.record( 
-//   z.string(),                    
-//   z.object({                      
+// const connectionsSchema = z.record(
+//   z.string(),
+//   z.object({
 //     main: z.array(connectionTargetSchema)
 //   })
 // );
@@ -218,12 +207,11 @@ export const connectionSchema = z.object({
   source: z.string(),
   sourceHandle: z.string().optional(),
   target: z.string(),
-  targetHandle: z.string().optional()
-})
-
+  targetHandle: z.string().optional(),
+});
 
 export const createWorkflowBodySchema = z.object({
-  name: z.string().min(1, 'Workflow name cannot be empty.'),
+  name: z.string().min(1, "Workflow name cannot be empty."),
   description: z.string().optional(),
   nodes: z.array(nodeSchema),
   connections: z.array(connectionSchema),
@@ -231,22 +219,31 @@ export const createWorkflowBodySchema = z.object({
 
 // Schemas for Credentials
 const telegramCredentialSchema = z.object({
-  type: z.literal(Credentials.telegram),
-  name: z.string().min(1, 'Credential name cannot be empty.'),
+  type: z.literal(CREDENTIAL_TYPE.telegram),
+  name: z.string().min(1, "Credential name cannot be empty."),
   data: z.object({
-    botToken: z.string().min(1, 'Bot token is required.'),
+    botToken: z.string().min(1, "Bot token is required."),
   }),
 });
 
 const emailCredentialSchema = z.object({
-  type: z.literal(Credentials.email),
-  name: z.string().min(1, 'Credential name cannot be empty.'),
+  type: z.literal(CREDENTIAL_TYPE.email),
+  name: z.string().min(1, "Credential name cannot be empty."),
   data: z.object({
-    apiKey: z.string().min(1, 'API key is required.'),
+    apiKey: z.string().min(1, "API key is required."),
   }),
 });
 
-export const createCredentialBodySchema = z.discriminatedUnion('type', [
+const openAICredentialSchema = z.object({
+  type: z.literal(CREDENTIAL_TYPE.openai),
+  name: z.string().min(1, "Credential name cannot be empty."),
+  data: z.object({
+    apiKey: z.string().min(1, "API key is required."),
+  }),
+});
+
+export const createCredentialBodySchema = z.discriminatedUnion("type", [
   telegramCredentialSchema,
   emailCredentialSchema,
+  openAICredentialSchema,
 ]);
