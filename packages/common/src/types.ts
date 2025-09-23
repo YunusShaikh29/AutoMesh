@@ -59,61 +59,7 @@ export type Node = ActionNode | TriggerNode;
 
 export type Nodes = Node[];
 
-// export interface ConnectionTarget {
-//     node: string            //the node which we have to connect to
-//     input: string           //the input of the node which we have to connect to eg. main,
-// }
 
-// export type Connections = {
-//     [sourceNodeName: string]: {
-//         [outputName: string]: ConnectionTarget[] //outputName is the name of the output of the source node eg. main, error, etc.
-//     }
-// }
-
-// export interface Connection {
-//   source: {
-//     node: string;
-//     outputName: string; // e.g., "main"
-//   };
-//   target: {
-//     node: string;
-//     inputName: string; // e.g., "main"
-//   };
-// }
-
-// export type Connections = Connection[];
-
-// export type Connections
-
-// {"trigger a webhook": {
-//     "main": [
-//         {
-//             sourceNode: "trigger a webhook",
-//             targetNode: "send confirmation email"
-//         }
-//     ]
-// }}
-
-/* 
-    {
-  "Catch Customer Inquiry": {
-    "main": [
-      [
-        {
-          "node": "Send Confirmation Email",
-          "input": "main"
-        }
-      ],
-      [
-        {
-          "node": "Notify Support Team",
-          "input": "main"
-        }
-      ]
-    ]
-  }
-}
-*/
 
 const webhookParametersSchema = z.object({});
 
@@ -126,9 +72,11 @@ const aiAgentParametersSchema = z.object({
 const telegramParametersSchema = z.object({
   chatId: z.string().optional().default(""),
   message: z.string().optional().default(""),
+  credentialId: z.string().optional().default(""),
 });
 
 const emailParametersSchema = z.object({
+  credentialId: z.string().optional().default(""),
   to: z.string().optional().default(""),
   subject: z.string().optional().default(""),
   body: z.string().optional().default(""),

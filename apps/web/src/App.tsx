@@ -5,6 +5,7 @@ import AuthPage from "./pages/AuthPage";
 import WorkflowEditorCanvas from "./pages/WorflowEditorCanvas";
 import Credentials from "./pages/Credentials";
 import LandingPage from "./pages/LandingPage";
+import ExecutionDetailPage from "./pages/ExecutionDetailPage";
 
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PublicRoute } from "./components/PublicRoute";
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "/credentials",
         element: <Credentials />,
+      },
+      {
+        path: "/workflows/:workflowId/executions/:executionId",
+        element: <ExecutionDetailPage />,
       },
     ],
   },

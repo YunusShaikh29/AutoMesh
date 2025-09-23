@@ -36,26 +36,38 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchWorkflows = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await axios.get("/api/v0/workflows");
-        setWorkflows(response.data.workflows);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred");
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setIsLoading(false);
+  const fetchWorkflows = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get("/api/v0/workflows");
+      setWorkflows(response.data.workflows);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "An error occurred");
+      } else {
+        setError("An unexpected error occurred");
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchWorkflows();
   }, []);
+
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    if (window.confirm("Are you sure you want to delete this workflow?")) {
+      try {
+        await axios.delete(`/api/v0/workflows/${workflowId}`);
+        fetchWorkflows();
+      } catch (err) {
+        setError("Failed to delete workflow.");
+        console.error(err);
+      }
+    }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -79,13 +91,25 @@ const Dashboard = () => {
       ) : (
         <div>
           {workflows.map((workflow) => (
-            <Link to={`/workflow/${workflow.id}`}>
-              <div key={workflow.id} className="border p-4 mb-2 rounded">
+            <div
+              key={workflow.id}
+              className="border p-4 mb-2 rounded flex justify-between items-center"
+            >
+              <Link to={`/workflow/${workflow.id}`} className="flex-grow">
                 <h2 className="text-xl font-semibold">{workflow.name}</h2>
                 <p>{workflow.description}</p>
                 <p>Status: {workflow.active ? "Active" : "Inactive"}</p>
-              </div>
-            </Link>
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  handleDeleteWorkflow(workflow.id);
+                }}
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
           ))}
         </div>
       )}

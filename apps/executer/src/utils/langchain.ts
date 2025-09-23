@@ -23,5 +23,7 @@ export const executeLLM = async ({ modelName, prompt, apiKey }: LLMParams) => {
 
   const response = await model.invoke(prompt);
 
+  console.log("response.content", response.content)
+
   return response.content;
 };

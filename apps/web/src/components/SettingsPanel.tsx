@@ -1,17 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AppNode } from "../pages/WorflowEditorCanvas";
 import { WebhookSettings } from "./WebhookSettings";
 import { AIAgentSettings } from "./AIAgentSettings";
 import { TelegramSettings } from "./TelegramSettings";
 import { EmailSettings } from "./EmailSettings";
 
+
+
 export interface SettingsPanelProps {
   selectedNode: AppNode | null;
   onNodeChange: (node: AppNode) => void;
+  workflowId: string;
 }
 
 export function SettingsPanel({
   selectedNode,
   onNodeChange,
+  workflowId
 }: SettingsPanelProps) {
 
 
@@ -41,7 +46,7 @@ export function SettingsPanel({
       </div>
 
       {selectedNode.kind === "webhook" && (
-        <WebhookSettings node={selectedNode} />
+        <WebhookSettings node={selectedNode} workflowId={workflowId} />
       )}
       {selectedNode.kind === "aiAgent" && (
         <AIAgentSettings node={selectedNode} onChange={onNodeChange} />

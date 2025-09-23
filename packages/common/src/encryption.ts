@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 
 dotenv.config()
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "automesh_encryption";
 
 if (!ENCRYPTION_KEY) {
   throw new Error(

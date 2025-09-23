@@ -6,6 +6,7 @@ import { authRouter } from './v0/routes/authRouter';
 import { workflowRouter } from './v0/routes/workflowRoute';
 import { credentialsRouter } from './v0/routes/credentialsRoute';
 import { webhookRouter } from './v0/routes/webhookRouter';
+import {executionRouter} from "./v0/routes/executionRouter";
 
 const app: Express = express();
 const port = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.use('/api/v0/auth', authRouter);
 app.use('/api/v0/workflows', workflowRouter);
 app.use('/api/v0/credentials', credentialsRouter);
 app.use('/webhook', webhookRouter);
+app.use("/api/v0", executionRouter);
 
 
 app.listen(port, () => {

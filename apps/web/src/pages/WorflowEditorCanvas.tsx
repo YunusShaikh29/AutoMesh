@@ -3,7 +3,7 @@
 import axios from "axios";
 import type { createWorkflowBodySchema } from "common/types";
 import { useEffect, useState, type ChangeEvent, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import ReactFlow, {
   Background,
@@ -18,16 +18,21 @@ import ReactFlow, {
   type OnEdgesChange,
   addEdge,
   applyEdgeChanges,
+  ReactFlowProvider,
+  useNodesState,
+  useEdgesState,
 } from "reactflow";
 import {
   ACTION_KIND,
   NODE_TYPE,
   TRIGGER_KIND,
   type nodeSchema,
+  type connectionSchema,
 } from "common/types";
 import { v4 as uuidv4 } from "uuid";
 import { CustomNode } from "../components/CustomNode";
 import { SettingsPanel } from "../components/SettingsPanel";
+import ExecutionHistoryModal from "../components/ExecutionHistoryModal";
 
 type Workflow = z.infer<typeof createWorkflowBodySchema> & {
   id: string;
@@ -52,6 +57,8 @@ const WorkflowEditorCanvas = () => {
   const [rfEdges, setRfEdges] = useState<ReactFlowEdge[]>([]); // edges are our connections in the workflow db, reactflow expects an array of edges
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
@@ -61,7 +68,7 @@ const WorkflowEditorCanvas = () => {
         // Also deselect the node if it was selected
         if (selectedNodeId === nodeId) {
           setSelectedNodeId(null);
-        }
+        } 
 
         const updatedNodes = currentWorkflow.nodes.filter(
           (node) => node.id !== nodeId
@@ -163,6 +170,7 @@ const WorkflowEditorCanvas = () => {
       parameters: {
         model: "gpt-4o-mini",
         prompt: "",
+        credentialId: "",
       },
     };
     setWorkflow((prevWorkflow) => {
@@ -170,6 +178,55 @@ const WorkflowEditorCanvas = () => {
       return {
         ...prevWorkflow,
         nodes: [...prevWorkflow.nodes, newAIAgentNode],
+      };
+    });
+  };
+
+  const handleAddEmailNode = () => {
+    const newEmailNode: AppNode = {
+      id: uuidv4(),
+      name: "Send Email",
+      type: NODE_TYPE.action,
+      kind: ACTION_KIND.email,
+      position: { x: 200, y: 350 },
+      description: "Sends an email via Resend.",
+      disabled: false,
+      parameters: {
+        credentialId: "",
+        to: "",
+        subject: "",
+        body: "",
+      },
+    };
+    setWorkflow((prevWorkflow) => {
+      if (!prevWorkflow) return;
+      return {
+        ...prevWorkflow,
+        nodes: [...prevWorkflow.nodes, newEmailNode],
+      };
+    });
+  };
+
+    const handleAddTelegramNode = () => {
+    const newTelegramNode: AppNode = {
+      id: uuidv4(),
+      name: "Send Telegram Message",
+      type: NODE_TYPE.action,
+      kind: ACTION_KIND.telegram,
+      position: { x: 200, y: 450 },
+      description: "Sends a message to a Telegram chat.",
+      disabled: false,
+      parameters: {
+        credentialId: "",
+        chatId: "",
+        message: "",
+      },
+    };
+    setWorkflow((prevWorkflow) => {
+      if (!prevWorkflow) return;
+      return {
+        ...prevWorkflow,
+        nodes: [...prevWorkflow.nodes, newTelegramNode],
       };
     });
   };
@@ -199,14 +256,9 @@ const WorkflowEditorCanvas = () => {
     [setWorkflow]
   );
 
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => {
-      setRfEdges((currentRfEdges) => applyEdgeChanges(changes, currentRfEdges));
-    },
-    []
-  );
-
- 
+  const onEdgesChange: OnEdgesChange = useCallback((changes) => {
+    setRfEdges((currentRfEdges) => applyEdgeChanges(changes, currentRfEdges));
+  }, []);
 
   //this gets called when we move the nodes around
   const handleOnNodesChange: OnNodesChange = useCallback(
@@ -245,36 +297,49 @@ const WorkflowEditorCanvas = () => {
     [setWorkflow]
   );
 
-  const handleOnNodeClick = useCallback(
-    (_: any, node: ReactFlowNode) => {
-      setSelectedNodeId(node.id);
-    },
-    []
-  );
+  const handleOnNodeClick = useCallback((_: any, node: ReactFlowNode) => {
+    setSelectedNodeId(node.id);
+  }, []);
 
   const handOnPaneClick = () => {
     setSelectedNodeId(null);
   };
 
   //will pass this to settings panel
-  const handleNodeChange = useCallback((updatedNode: AppNode) => {
-    setWorkflow((prevWorkflow) => {
+  const handleNodeChange = useCallback(
+    (updatedNode: AppNode) => {
+      setWorkflow((prevWorkflow) => {
         if (!prevWorkflow) return;
         const updatedNodes = prevWorkflow.nodes.map((node) => {
           if (node.id === updatedNode.id) {
-            return {...updatedNode};
+            return { ...updatedNode };
           }
           return node;
         });
         return {
-            ...prevWorkflow,
-            nodes: updatedNodes,
+          ...prevWorkflow,
+          nodes: updatedNodes,
         };
-    });
-}, [setWorkflow]);
+      });
+    },
+    [setWorkflow]
+  );
 
-// console.log("all of the workflow", workflow)
-const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
+  const handleRunWorkflow = async () => {
+    if (!id) return;
+    try {
+      await handleSave();
+      const response = await axios.post(`/api/v0/workflows/${id}/run`);
+      const { executionId } = response.data;
+      navigate(`/workflows/${id}/executions/${executionId}`);
+    } catch (error: any) {
+      console.error("Failed to run workflow:", error);
+    }
+  };
+
+  // console.log("all of the workflow", workflow)
+  const selectedNode =
+    workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -306,6 +371,12 @@ const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || nul
             Save
           </button>
           <button
+            onClick={handleRunWorkflow}
+            className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+          >
+            Run
+          </button>
+          <button
             onClick={handleAddNode}
             className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
           >
@@ -316,6 +387,24 @@ const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || nul
             className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
           >
             AI Agent
+          </button>
+          <button
+            onClick={handleAddEmailNode}
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          >
+            Email
+          </button>
+          <button
+            onClick={handleAddTelegramNode}
+            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+          >
+            Telegram
+          </button>
+          <button
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mr-2"
+          >
+            History
           </button>
         </div>
       </div>
@@ -336,7 +425,20 @@ const selectedNode = workflow?.nodes.find((n) => n.id === selectedNodeId) || nul
             <Controls />
           </ReactFlow>
         </div>
-        {selectedNode && <SettingsPanel selectedNode={selectedNode} onNodeChange={handleNodeChange}/>}
+        {selectedNode && (
+          <SettingsPanel
+            selectedNode={selectedNode}
+            onNodeChange={handleNodeChange}
+            workflowId={id || ""}
+          />
+        )}
+        {id && (
+          <ExecutionHistoryModal
+            workflowId={id || ""}
+            isOpen={isHistoryModalOpen}
+            onClose={() => setIsHistoryModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

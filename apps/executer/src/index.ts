@@ -21,7 +21,7 @@ interface ExecutionWithWorkflow
     include: { workflow: true };
   }> {}
 
-type AppNode = z.infer<typeof nodeSchema>;
+export type AppNode = z.infer<typeof nodeSchema>;
 type Connection = z.infer<typeof connectionSchema>;
 
 const getCredential = async (credentialId: string, userId: string) => {
@@ -61,12 +61,19 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
       throw new Error("Workflow has no trigger node.");
     }
 
-    // --- Start Execution ---
+    //Start Execution
 
     let initialData: any = {};
     switch (triggerNode.kind) {
       case TRIGGER_KIND.webhook:
-        initialData = { message: "webhook recieved", body: {}, headers: {} };
+        initialData = {
+          message: "webhook received",
+          // @ts-ignore
+          body: execution.triggerData?.body || {},
+          // @ts-ignore
+          headers: execution.triggerData?.headers || {},
+        };
+        // console.log("execution, webhook node", execution.triggerData)
         break;
       case TRIGGER_KIND.manual:
         initialData = { message: "manual trigger", data: {} };
@@ -102,10 +109,11 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
       try {
         console.log(`Executing node: ${currentNode.name}`);
 
-        // resolve the parameters for example {{aiAgentNode.result}} will be replaced with the result of the aiAgentNode
+        //dynamic parameters resolving {{}}
         const resolvedParameters = resolveParameters({
           parameters: currentNode.parameters || {},
           nodeOutputs,
+          nodes,
         });
 
         const nodeToExecute = {
@@ -136,11 +144,15 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
 
             const { apiKey } = JSON.parse(credential);
 
-            output = await executeLLM({
+            const response = await executeLLM({
               modelName,
               prompt,
               apiKey,
             });
+            output = {
+              output: response,
+            };
+            console.log("output, ai agent node", output)
             break;
           }
 
@@ -162,6 +174,7 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
               chatId,
               message,
             });
+            console.log("output, telegram node", output);
             break;
           }
 
@@ -185,6 +198,7 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
               subject,
               body,
             });
+            console.log("output, email node", output);
             break;
           }
 

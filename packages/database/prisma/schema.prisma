@@ -89,18 +89,15 @@ model AuthToken {
 
 
 model Execution {
-  id String @id @default(uuid())
-
+  id          String   @id @default(uuid())
+  workflowId  String
   workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  workflowId String
-
-  // Snapshot of the workflow at the time of execution
+  status      String   @default("PENDING") //PENDING, RUNNING, COMPLETED, FAILED
+  trigger     String? // "manual", "webhook"
+  triggerData Json? // To store the initial data from triggers like webhooks
   nodes       Json
   connections Json
-
-  status      ExecutionStatus @default(PENDING)
-  trigger     String 
-  output      Json? 
+  output      Json?
   error       String?
 
   startedAt   DateTime  @default(now())
