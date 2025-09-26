@@ -189,7 +189,7 @@ const WorkflowEditorCanvas = () => {
       type: NODE_TYPE.action,
       kind: ACTION_KIND.email,
       position: { x: 200, y: 350 },
-      description: "Sends an email via Resend.",
+      description: "Sends an email.",
       disabled: false,
       parameters: {
         credentialId: "",

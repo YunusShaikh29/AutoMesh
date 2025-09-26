@@ -7,6 +7,7 @@ import { workflowRouter } from './v0/routes/workflowRoute';
 import { credentialsRouter } from './v0/routes/credentialsRoute';
 import { webhookRouter } from './v0/routes/webhookRouter';
 import {executionRouter} from "./v0/routes/executionRouter";
+import { googleOAuthRouter } from "./v0/routes/googleOAuth";
 
 const app: Express = express();
 const port = process.env.PORT || 8080;
@@ -23,6 +24,7 @@ app.use('/api/v0/workflows', workflowRouter);
 app.use('/api/v0/credentials', credentialsRouter);
 app.use('/webhook', webhookRouter);
 app.use("/api/v0", executionRouter);
+app.use("/api/v0", googleOAuthRouter);
 
 
 app.listen(port, () => {

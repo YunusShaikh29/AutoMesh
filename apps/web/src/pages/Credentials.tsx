@@ -6,12 +6,15 @@ import { createCredentialBodySchema, CREDENTIAL_TYPE } from "common/types";
 
 type Credential = z.infer<typeof createCredentialBodySchema> & { id: string };
 
-type NewCredentialState = Omit<z.infer<typeof createCredentialBodySchema>, 'data'> & {
-    data: {
-        apiKey?: string;
-        botToken?: string;
-    }
-}
+type NewCredentialState = Omit<
+  z.infer<typeof createCredentialBodySchema>,
+  "data"
+> & {
+  data: {
+    apiKey?: string;
+    botToken?: string;
+  };
+};
 
 const Credentials = () => {
   const [credentials, setCredentials] = useState<Credential[]>([]);
@@ -43,27 +46,36 @@ const Credentials = () => {
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    
-    if (name === 'type') {
-        const newType = value as CREDENTIAL_TYPE;
 
-        if (newType === CREDENTIAL_TYPE.telegram) {
-            setNewCredential({ name: newCredential.name, type: newType, data: { botToken: '' } });
-        } else { 
-            setNewCredential({ name: newCredential.name, type: newType, data: { apiKey: '' } });
-        }
-    } else if (name === 'apiKey' || name === 'botToken') {
-        setNewCredential(prev => ({ 
-            ...prev, 
-            data: { ...prev.data, [name]: value } 
-        }));
+    if (name === "type") {
+      const newType = value as CREDENTIAL_TYPE;
+
+      if (newType === CREDENTIAL_TYPE.telegram) {
+        setNewCredential({
+          name: newCredential.name,
+          type: newType,
+          data: { botToken: "" },
+        });
+      } else {
+        setNewCredential({
+          name: newCredential.name,
+          type: newType,
+          data: { apiKey: "" },
+        });
+      }
+    } else if (name === "apiKey" || name === "botToken") {
+      setNewCredential((prev) => ({
+        ...prev,
+        data: { ...prev.data, [name]: value },
+      }));
     } else {
-        setNewCredential(prev => ({ ...prev, [name]: value }));
+      setNewCredential((prev) => ({ ...prev, [name]: value }));
     }
   };
-
 
   const handleCreateCredential = async (e: FormEvent) => {
     e.preventDefault();
@@ -71,9 +83,16 @@ const Credentials = () => {
       await axios.post("/api/v0/credentials", newCredential);
       fetchCredentials();
       setIsModalOpen(false);
-      setNewCredential({ name: "", type: CREDENTIAL_TYPE.openai, data: { apiKey: "" } });
+      setNewCredential({
+        name: "",
+        type: CREDENTIAL_TYPE.openai,
+        data: { apiKey: "" },
+      });
     } catch (err: any) {
-      setError("Failed to create credential. " + (err.response?.data?.details[0]?.message || ''));
+      setError(
+        "Failed to create credential. " +
+          (err.response?.data?.details[0]?.message || "")
+      );
       console.error(err);
     }
   };
@@ -90,61 +109,94 @@ const Credentials = () => {
     }
   };
 
+  const handleConnectGoogle = async () => {
+    try {
+      const response = await axios.get("/api/v0/oauth/google/connect");
+      const { url } = response.data;
+
+      window.location.href = url;
+    } catch (err) {
+      setError("Failed to start Google connection.");
+      console.error(err);
+    }
+  };
+
   const renderDataInput = () => {
     if (newCredential.type === CREDENTIAL_TYPE.telegram) {
-        return (
-            <div className="mb-6">
-                <label htmlFor="botToken" className="block text-sm font-medium text-gray-700">Bot Token</label>
-                <input
-                  type="password"
-                  id="botToken"
-                  name="botToken"
-                  value={newCredential.data.botToken || ''}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Paste your bot token here"
-                  required
-                />
-            </div>
-        )
+      return (
+        <div className="mb-6">
+          <label
+            htmlFor="botToken"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Bot Token
+          </label>
+          <input
+            type="password"
+            id="botToken"
+            name="botToken"
+            value={newCredential.data.botToken || ""}
+            onChange={handleInputChange}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Paste your bot token here"
+            required
+          />
+        </div>
+      );
     }
     return (
-        <div className="mb-6">
-            <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">API Key</label>
-            <input
-              type="password"
-              id="apiKey"
-              name="apiKey"
-              value={newCredential.data.apiKey || ''}
-              onChange={handleInputChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Paste your secret key here"
-              required
-            />
-        </div>
-    )
-  }
+      <div className="mb-6">
+        <label
+          htmlFor="apiKey"
+          className="block text-sm font-medium text-gray-700"
+        >
+          API Key
+        </label>
+        <input
+          type="password"
+          id="apiKey"
+          name="apiKey"
+          value={newCredential.data.apiKey || ""}
+          onChange={handleInputChange}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Paste your secret key here"
+          required
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Credentials</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Add Credential
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
+            Add Credential
+          </button>
+          <button
+            onClick={handleConnectGoogle}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+          >
+            Add Gmail Credential
+          </button>
+        </div>
       </div>
 
       {isLoading && <p>Loading credentials...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      
+
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <ul className="divide-y divide-gray-200">
           {credentials.length > 0 ? (
             credentials.map((cred) => (
-              <li key={cred.id} className="p-4 flex justify-between items-center">
+              <li
+                key={cred.id}
+                className="p-4 flex justify-between items-center"
+              >
                 <div>
                   <p className="font-semibold text-lg">{cred.name}</p>
                   <p className="text-sm text-gray-500 uppercase">{cred.type}</p>
@@ -169,7 +221,12 @@ const Credentials = () => {
             <h2 className="text-2xl font-bold mb-6">Add New Credential</h2>
             <form onSubmit={handleCreateCredential}>
               <div className="mb-4">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Name
+                </label>
                 <input
                   type="text"
                   id="name"
@@ -182,7 +239,12 @@ const Credentials = () => {
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+                <label
+                  htmlFor="type"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Type
+                </label>
                 <select
                   id="type"
                   name="type"
@@ -190,9 +252,13 @@ const Credentials = () => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {Object.values(CREDENTIAL_TYPE).map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
+                  {Object.values(CREDENTIAL_TYPE)
+                    .filter((type) => type !== CREDENTIAL_TYPE.google_oauth)
+                    .map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
                 </select>
               </div>
               {renderDataInput()}

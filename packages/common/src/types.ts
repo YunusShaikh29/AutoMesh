@@ -9,6 +9,7 @@ export enum CREDENTIAL_TYPE {
   email = "email",
   telegram = "telegram",
   openai = "openai",
+  google_oauth = "google_oauth",
 }
 
 export enum TRIGGER_KIND {
@@ -182,6 +183,16 @@ const emailCredentialSchema = z.object({
   }),
 });
 
+const googleOAuthCredentialSchema = z.object({
+  type: z.literal(CREDENTIAL_TYPE.google_oauth),
+  name: z.string().min(1, "Credential name cannot be empty."),
+  data: z.object({
+    accessToken: z.string(),
+    refreshToken: z.string().optional(),
+    expiryDate: z.number().optional(),
+  }),
+});
+
 const openAICredentialSchema = z.object({
   type: z.literal(CREDENTIAL_TYPE.openai),
   name: z.string().min(1, "Credential name cannot be empty."),
@@ -194,4 +205,5 @@ export const createCredentialBodySchema = z.discriminatedUnion("type", [
   telegramCredentialSchema,
   emailCredentialSchema,
   openAICredentialSchema,
+  googleOAuthCredentialSchema,
 ]);

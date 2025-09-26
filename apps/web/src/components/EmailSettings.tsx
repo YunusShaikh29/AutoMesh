@@ -26,7 +26,7 @@ export function EmailSettings({ node, onChange }: Props) {
       try {
         const response = await axios.get<Credential[]>("/api/v0/credentials");
         const emailCredentials = response.data.filter(
-          (cred) => cred.type === CREDENTIAL_TYPE.email
+          (cred) =>cred.type === CREDENTIAL_TYPE.email || cred.type === CREDENTIAL_TYPE.google_oauth
         );
         setCredentials(emailCredentials);
       } catch (error) {
@@ -47,24 +47,44 @@ export function EmailSettings({ node, onChange }: Props) {
     });
   };
 
+  // Filter for credentials that can be used for sending emails
+  const emailCredentials = credentials.filter(
+    (cred) => cred.type === CREDENTIAL_TYPE.email || cred.type === CREDENTIAL_TYPE.google_oauth
+  );
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-800">Send Email</h3>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="mb-4">
+        <label
+          htmlFor="credential"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Credential
         </label>
         <select
-          value={node.parameters?.credentialId}
+          id="credential"
+          name="credentialId"
+          value={node.parameters?.credentialId || ""}
           onChange={(e) =>
-            handleParameterChange("credentialId", e.target.value)
+            onChange({
+              ...node,
+              //   @ts-ignore
+              parameters: {
+                ...node.parameters,
+                // @ts-ignore
+                credentialId: e.target.value || "",
+              },
+            })
           }
           className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Select a credential</option>
-          {credentials.map((cred) => (
-            <option value={cred.id} key={cred.id}>
+          <option value="">
+            Select a credential
+          </option>
+          {emailCredentials.map((cred) => (
+            <option key={cred.id} value={cred.id}>
               {cred.name}
             </option>
           ))}

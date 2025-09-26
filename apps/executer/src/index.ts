@@ -13,6 +13,7 @@ import { executeLLM } from "./utils/langchain";
 import { resolveParameters } from "./utils/interpolation";
 import { sendTelegramMessage } from "./utils/telegram";
 import { sendEmail } from "./utils/email";
+import { sendGmail } from "./utils/sendGmail";
 
 const EXECUTION_POLLING_INTERVAL = 5000;
 
@@ -37,6 +38,16 @@ const getCredential = async (credentialId: string, userId: string) => {
   }
   const decryptedCredential = decrypt(encryptedCredential.data);
   return decryptedCredential;
+};
+
+const getFullCredential = async (credentialId: string, userId: string) => {
+  const encryptedCredential = await prisma.credential.findUnique({
+    where: {
+      id: credentialId,
+      userId,
+    },
+  });
+  return encryptedCredential;
 };
 
 const nodeOutputs: { [nodeId: string]: any } = {};
@@ -185,20 +196,39 @@ const executeWorkflow = async (execution: ExecutionWithWorkflow) => {
               subject = "",
               body = "",
             } = nodeToExecute.parameters || {};
+            
+            
+            const fullCredential = await getFullCredential(credentialId, execution.workflow.userId);
+            
+            if (!fullCredential) {
+              throw new Error(`Credential with ID ${credentialId} not found.`);
+            }
 
-            const credential = await getCredential(
-              credentialId,
-              execution.workflow.userId
-            );
-            const { apiKey } = JSON.parse(credential);
+            // console.log("fullCredential", fullCredential);
 
-            output = await sendEmail({
-              apiKey,
-              to,
-              subject,
-              body,
-            });
-            console.log("output, email node", output);
+            // console.log("fullCredential.type", fullCredential.type, fullCredential.data);
+
+            if (fullCredential.type === "google_oauth") {
+              const decryptedCredential = JSON.parse(decrypt(fullCredential.data));
+              // console.log("decryptedCredential", decryptedCredential);
+              output = await sendGmail({
+                credentialId,
+                decryptedCredential,
+                to,
+                subject,
+                body,
+              });
+            } else {
+              // This is the original logic for Resend/SMTP
+              const decryptedCredential = JSON.parse(decrypt(fullCredential.data));
+              const { apiKey } = decryptedCredential;
+              output = await sendEmail({
+                apiKey,
+                to,
+                subject,
+                body,
+              });
+            }
             break;
           }
 

@@ -19,6 +19,7 @@
     "common": "*",
     "database": "*",
     "dotenv": "^17.2.2",
+    "googleapis": "^160.0.0",
     "langchain": "^0.3.34",
     "node-telegram-bot-api": "^0.66.0",
     "resend": "^6.1.0",
