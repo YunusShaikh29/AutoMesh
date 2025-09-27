@@ -53,6 +53,25 @@ export const userAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: async () => {
-    set({ user: null, isAuthenticated: false });
+    try {
+      await api.post("/auth/logout");
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false,
+        isError: false,
+        errorMessage: undefined
+      });
+    } catch (error: any) {
+      console.error("Error during logout:", error);
+      // Even if the API call fails, clear the local state
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false,
+        isError: false,
+        errorMessage: undefined
+      });
+    }
   },
 }));

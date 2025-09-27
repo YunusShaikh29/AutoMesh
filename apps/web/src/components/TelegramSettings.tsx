@@ -48,13 +48,18 @@ export function TelegramSettings({ node, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">
-        Send Telegram Message
-      </h3>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </div>
+        <h3 className="subheading">Send Telegram Message</h3>
+      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Credential
         </label>
         <select
@@ -62,7 +67,7 @@ export function TelegramSettings({ node, onChange }: Props) {
           onChange={(e) =>
             handleParameterChange("credentialId", e.target.value)
           }
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
         >
           <option value="">Select a credential</option>
           {credentials.map((cred) => (
@@ -73,28 +78,28 @@ export function TelegramSettings({ node, onChange }: Props) {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Chat ID
         </label>
         <input
           type="text"
           value={node.parameters?.chatId || ""}
           onChange={(e) => handleParameterChange("chatId", e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
           placeholder="Enter Chat ID or Channel ID"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Message Text
         </label>
         <textarea
           value={node.parameters?.message || ""}
           onChange={(e) => handleParameterChange("message", e.target.value)}
           rows={5}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input resize-none"
           placeholder="Hello from n8n-v0!"
         />
       </div>

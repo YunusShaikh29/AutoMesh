@@ -6,11 +6,11 @@ import { useState } from "react";
 const MailIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className="h-16 w-16 text-blue-500"
+    className="h-20 w-20 text-[var(--color-primary)]"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
-    strokeWidth={1}
+    strokeWidth={1.5}
   >
     <path
       strokeLinecap="round"
@@ -52,65 +52,80 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900 text-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-        {formSubmitted ? (
-          <div className="text-center space-y-4">
-            <div className="flex justify-center">
-              <MailIcon />
+    <div className="min-h-screen bg-gradient-to-br from-[var(--color-bg)] to-[var(--color-accent)] dark:from-[var(--color-bg-dark)] dark:to-[var(--color-bg-dark)] flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-fade-in">
+        <div className="card">
+          {formSubmitted ? (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="p-4 rounded-full bg-[var(--color-accent)] dark:bg-[var(--color-border-dark)]">
+                  <MailIcon />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h1 className="heading text-3xl">Check your inbox</h1>
+                <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
+                  We've sent a magic link to{" "}
+                  <span className="font-semibold text-[var(--color-primary)]">{email}</span>.
+                  Click the link to sign in.
+                </p>
+                <p className="text-sm text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-60">
+                  (In development, the link is logged to your backend console.)
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold">Check your inbox</h1>
-            <p className="text-gray-400">
-              We've sent a magic link to{" "}
-              <span className="font-semibold text-gray-200">{email}</span>.
-              Click the link to sign in.
-            </p>
-            <p className="text-sm text-gray-500">
-              (In development, the link is logged to your backend console.)
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold">Sign In or Sign Up</h1>
-              <p className="text-gray-400">
-                Enter your email to receive a magic link.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={handleOnChange}
-                  placeholder="name@example.com"
-                  className="w-full px-4 py-2 text-gray-100 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  readOnly={isLoading}
-                />
+          ) : (
+            <div className="space-y-6">
+              <div className="text-center space-y-3">
+                <h1 className="heading text-3xl">Welcome Back</h1>
+                <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
+                  Enter your email to receive a magic link and get started.
+                </p>
               </div>
 
-              {error && <p className="text-sm text-red-400">{error}</p>}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={handleOnChange}
+                    placeholder="name@example.com"
+                    className="input"
+                    readOnly={isLoading}
+                  />
+                </div>
 
-              <div>
+                {error && (
+                  <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:bg-gray-500 disabled:cursor-not-allowed"
+                  className="button-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  {isLoading ? "Sending..." : "Send Magic Link"}
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <div className="animate-pulse-subtle w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                      Sending...
+                    </span>
+                  ) : (
+                    "Send Magic Link"
+                  )}
                 </button>
-              </div>
-            </form>
-          </>
-        )}
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

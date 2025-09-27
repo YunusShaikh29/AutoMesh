@@ -1,2 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
+
+:root {
+  --color-primary: hsl(221 83% 53%);
+  --color-primary-light: hsl(221 83% 60%);
+  --color-accent: hsl(210 40% 96%);
+  --color-accent-light: hsl(210 40% 90%);
+  --color-bg: hsl(0 0% 100%);
+  --color-bg-dark: hsl(240 10% 4%);
+  --color-text: hsl(240 10% 4%);
+  --color-text-dark: hsl(0 0% 100%);
+  --color-success: hsl(143 85% 43%);
+  --color-error: hsl(0 76% 59%);
+  --color-border: hsl(240 5% 84%);
+  --color-border-dark: hsl(240 5% 26%);
+
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+
+  --transition-duration: 200ms;
+  --transition-easing: ease-in-out;
+}
+
+
+body {
+  font-family: var(--font-family-sans);
+  font-size: 1rem;
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+}
+
+.dark body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+/* Ensure all text elements inherit proper colors */
+* {
+  color: inherit;
+}
+
+.dark * {
+  color: inherit;
+}
+
+/* Force text visibility in dark mode */
+.dark {
+  color: var(--color-text-dark) !important;
+}
+
+.dark p,
+.dark span,
+.dark div,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark label,
+.dark input,
+.dark textarea,
+.dark select {
+  color: var(--color-text-dark) !important;
+}
+
+/* Ensure specific text elements are visible */
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-gray-700,
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: var(--color-text-dark) !important;
+  opacity: 0.8;
+}
+
+.button-primary {
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all var(--transition-duration) var(--transition-easing);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-primary:hover {
+  background-color: var(--color-primary-light);
+  transform: scale(1.05);
+}
+
+.button-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+  opacity: 0.5;
+}
+
+.button-secondary {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all var(--transition-duration) var(--transition-easing);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-secondary:hover {
+  background-color: var(--color-accent-light);
+  transform: scale(1.05);
+}
+
+.card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  padding: 1.5rem;
+  transition: all var(--transition-duration) var(--transition-easing);
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.dark .card {
+  background-color: var(--color-bg-dark);
+  border-color: var(--color-border-dark);
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: all var(--transition-duration) var(--transition-easing);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.dark .input {
+  background-color: var(--color-bg-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-dark);
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.dark .heading {
+  color: var(--color-text-dark);
+}
+
+.subheading {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.dark .subheading {
+  color: var(--color-text-dark);
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-duration) var(--transition-easing);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Additional utility classes for better text visibility */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-success {
+  color: var(--color-success) !important;
+}
+
+.text-error {
+  color: var(--color-error) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.bg-bg {
+  background-color: var(--color-bg) !important;
+}
+
+.bg-bg-dark {
+  background-color: var(--color-bg-dark) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.border-accent {
+  border-color: var(--color-accent) !important;
+}
+
+.border-border {
+  border-color: var(--color-border) !important;
+}
+
+.border-border-dark {
+  border-color: var(--color-border-dark) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transition, .animate-* { transition: none; animation: none; }
+}

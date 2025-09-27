@@ -53,13 +53,20 @@ export function EmailSettings({ node, onChange }: Props) {
   );
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">Send Email</h3>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 className="subheading">Send Email</h3>
+      </div>
 
-      <div className="mb-4">
+      <div className="space-y-2">
         <label
           htmlFor="credential"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]"
         >
           Credential
         </label>
@@ -78,7 +85,7 @@ export function EmailSettings({ node, onChange }: Props) {
               },
             })
           }
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
         >
           <option value="">
             Select a credential
@@ -91,41 +98,41 @@ export function EmailSettings({ node, onChange }: Props) {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           To
         </label>
         <input
           type="email"
           value={node.parameters?.to || ""}
           onChange={(e) => handleParameterChange("to", e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
           placeholder="recipient@example.com"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Subject
         </label>
         <input
           type="text"
           value={node.parameters?.subject || ""}
           onChange={(e) => handleParameterChange("subject", e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
           placeholder="Your email subject"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Body
         </label>
         <textarea
           value={node.parameters?.body || ""}
           onChange={(e) => handleParameterChange("body", e.target.value)}
           rows={5}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input resize-none"
           placeholder="Email body…"
         />
       </div>
