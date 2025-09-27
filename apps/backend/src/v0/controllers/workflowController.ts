@@ -192,6 +192,18 @@ export const executeWorkflow = async (
     if (!workflow.active) {
       return res.status(400).json({ error: "Workflow is not active" });
     }
+
+    const nodes = workflow.nodes as any[];
+    const hasTrigger = nodes.some(node => node.type === "trigger");
+    const hasActions = nodes.some(node => node.type === "action");
+
+    if (!hasTrigger) {
+      return res.status(400).json({ error: "Workflow must have at least one trigger node" });
+    }
+
+    if (!hasActions) {
+      return res.status(400).json({ error: "Workflow must have at least one action node" });
+    }
     
     const execution = await prisma.execution.create({
       data: {
@@ -241,6 +253,22 @@ export const runWorkflow = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Workflow not found" });
     }
 
+    if (!workflow.active) {
+      return res.status(400).json({ error: "Workflow is not active" });
+    }
+
+    const nodes = workflow.nodes as any[];
+    const hasTrigger = nodes.some(node => node.type === "trigger");
+    const hasActions = nodes.some(node => node.type === "action");
+
+    if (!hasTrigger) {
+      return res.status(400).json({ error: "Workflow must have at least one trigger node" });
+    }
+
+    if (!hasActions) {
+      return res.status(400).json({ error: "Workflow must have at least one action node" });
+    }
+
     const newExecution = await prisma.execution.create({
       data: {
         workflowId: workflow.id,
@@ -283,6 +311,44 @@ export const deleteWorkflow = async (req: AuthRequest, res: Response) => {
     res.status(200).json({ message: "Workflow deleted successfully" });
   } catch (error) {
     console.error("Failed to delete workflow:", error);
+    res.status(500).json({ error: "An internal server error occurred" });
+  }
+};
+
+export const toggleWorkflowStatus = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  const { id: workflowId } = req.params;
+
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const workflow = await prisma.workflow.findUnique({
+      where: { id: workflowId },
+    });
+
+    if (!workflow || workflow.userId !== userId) {
+      return res.status(404).json({ error: "Workflow not found" });
+    }
+
+    const updatedWorkflow = await prisma.workflow.update({
+      where: { id: workflowId },
+      data: { active: !workflow.active },
+      select: {
+        id: true,
+        name: true,
+        active: true,
+        updatedAt: true,
+      },
+    });
+
+    res.status(200).json({ 
+      message: `Workflow ${updatedWorkflow.active ? 'activated' : 'deactivated'} successfully`,
+      workflow: updatedWorkflow 
+    });
+  } catch (error) {
+    console.error("Failed to toggle workflow status:", error);
     res.status(500).json({ error: "An internal server error occurred" });
   }
 };

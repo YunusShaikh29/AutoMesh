@@ -7,6 +7,7 @@ import {
   updateWorkflow,
   runWorkflow,
   deleteWorkflow,
+  toggleWorkflowStatus,
 } from "../controllers/workflowController";
 const router = Router()
 
@@ -15,6 +16,7 @@ router.get("/", isAuthenticated, getWorkflows)
 router.get("/:id", isAuthenticated, getOneWorkflow)
 router.put("/:id", isAuthenticated, updateWorkflow);
 router.delete("/:id", isAuthenticated, deleteWorkflow);
+router.patch("/:id/toggle", isAuthenticated, toggleWorkflowStatus);
 
 router.post("/:workflowId/run", isAuthenticated, runWorkflow);
 

@@ -23,6 +23,35 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Webhook trigger not found" });
     }
 
+    if (!workflow.active) {
+      return res.status(400).json({ 
+        error: "Workflow is not active",
+        method: method,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate workflow structure for webhook execution
+    const nodes = workflow.nodes as any[];
+    const hasTrigger = nodes.some(node => node.type === "trigger");
+    const hasActions = nodes.some(node => node.type === "action");
+
+    if (!hasTrigger) {
+      return res.status(400).json({ 
+        error: "Workflow must have at least one trigger node",
+        method: method,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (!hasActions) {
+      return res.status(400).json({ 
+        error: "Workflow must have at least one action node",
+        method: method,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const workflowData = {
       method: method,
       body: method === 'GET' ? {} : {...req.body}, 

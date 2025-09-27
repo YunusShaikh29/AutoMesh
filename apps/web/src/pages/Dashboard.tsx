@@ -69,6 +69,23 @@ const Dashboard = () => {
     }
   };
 
+  const handleToggleWorkflow = async (workflowId: string, currentStatus: boolean) => {
+    try {
+      await axios.patch(`/api/v0/workflows/${workflowId}/toggle`);
+      // Update the local state immediately for better UX
+      setWorkflows(prevWorkflows => 
+        prevWorkflows.map(workflow => 
+          workflow.id === workflowId 
+            ? { ...workflow, active: !workflow.active }
+            : workflow
+        )
+      );
+    } catch (err) {
+      setError(`Failed to ${currentStatus ? 'deactivate' : 'activate'} workflow.`);
+      console.error(err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -171,12 +188,35 @@ const Dashboard = () => {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${workflow.active ? 'bg-[var(--color-success)]' : 'bg-gray-400'}`}></div>
-                  <span className="text-sm text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
-                    {workflow.active ? "Active" : "Inactive"}
-                  </span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${workflow.active ? 'bg-[var(--color-success)]' : 'bg-gray-400'}`}></div>
+                    <span className="text-sm text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
+                      {workflow.active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  
+                  {/* Toggle Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleWorkflow(workflow.id, workflow.active);
+                    }}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 ${
+                      workflow.active 
+                        ? 'bg-[var(--color-success)]' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                    title={`${workflow.active ? 'Deactivate' : 'Activate'} workflow`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        workflow.active ? 'translate-x-5' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
+                
                 <Link 
                   to={`/workflow/${workflow.id}`}
                   className="text-[var(--color-primary)] hover:text-[var(--color-primary-light)] text-sm font-medium flex items-center gap-1"
