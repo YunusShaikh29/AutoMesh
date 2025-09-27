@@ -21,7 +21,7 @@ export const Layout = () => {
         <div className="h-full flex flex-col p-6">
           <div className="mb-8">
             <h2 className="heading text-2xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent">
-              n8n-v0
+              AutoMesh
             </h2>
             <p className="text-sm text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-60 mt-1">
               Automation Platform
