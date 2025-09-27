@@ -9,11 +9,30 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (isError) {
-    return <p className="text-rose-400">Some error occured: {errorMessage}</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] dark:bg-[var(--color-bg-dark)]">
+        <div className="card text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="heading text-xl mb-2">Authentication Error</h3>
+          <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">{errorMessage}</p>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <p>Loading....</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] dark:bg-[var(--color-bg-dark)]">
+        <div className="text-center space-y-4">
+          <div className="animate-pulse-subtle w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)]">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (isAuthenticated) {

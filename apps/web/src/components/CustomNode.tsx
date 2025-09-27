@@ -9,24 +9,38 @@ export type CustomNodeProps = NodeProps<CustomNodeData>;
 
 export function CustomNode({ id, data }: CustomNodeProps) {
   return (
-    <div className="border border-gray-300 p-3 rounded-md bg-white text-gray-900 shadow-md relative group">
+    <div className="border border-[var(--color-border)] dark:border-[var(--color-border-dark)] p-4 rounded-lg bg-[var(--color-bg)] dark:bg-[var(--color-bg-dark)] text-[var(--color-text)] dark:text-[var(--color-text-dark)] shadow-lg relative group hover:shadow-xl transition-all duration-[var(--transition-duration)] hover:scale-105 min-w-[120px]">
       {/* Target handle on the LEFT */}
-      <Handle type="target" position={Position.Left} className="!bg-teal-500" />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="!bg-[var(--color-primary)] !border-2 !border-white dark:!border-[var(--color-bg-dark)] !w-3 !h-3" 
+      />
 
-      <div className="text-center">{data.label}</div>
+      <div className="text-center">
+        <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center mx-auto mb-2">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <p className="text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">{data.label}</p>
+      </div>
 
       {/* Source handle on the RIGHT */}
       <Handle
         type="source"
         position={Position.Right}
-        className="!bg-blue-500"
+        className="!bg-[var(--color-primary)] !border-2 !border-white dark:!border-[var(--color-bg-dark)] !w-3 !h-3"
       />
+      
       <button
         onClick={() => data.onDelete(id)}
-        className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity -mt-2 -mr-2"
-        aria-label="Delete node font-bold"
+        className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--color-error)] text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all duration-[var(--transition-duration)] hover:scale-110 shadow-lg"
+        aria-label="Delete node"
       >
-        X
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   );

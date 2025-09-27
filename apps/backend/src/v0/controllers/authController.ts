@@ -104,3 +104,20 @@ export const getMe = (req: AuthRequest, res: Response)=> {
     // console.log("this is backend", user)
     res.status(200).json({ user });
 }
+
+export const logout = async (req: AuthRequest, res: Response) => {
+    try {
+        res.clearCookie('auth_token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+        });
+
+        res.status(200).json({ 
+            message: 'Successfully logged out' 
+        });
+    } catch (error) {
+        console.error('Error during logout:', error);
+        res.status(500).json({ error: 'An internal server error occurred during logout.' });
+    }
+}

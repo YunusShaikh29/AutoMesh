@@ -50,11 +50,18 @@ export function AIAgentSettings({ node, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">AI Agent</h3>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+        <h3 className="subheading">AI Agent</h3>
+      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Credential
         </label>
         <select
@@ -62,7 +69,7 @@ export function AIAgentSettings({ node, onChange }: Props) {
           onChange={(e) =>
             handleParameterChange("credentialId", e.target.value)
           }
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
         >
           <option value="">Select a credential</option>
           {credentials.map((cred) => (
@@ -73,14 +80,14 @@ export function AIAgentSettings({ node, onChange }: Props) {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           Model
         </label>
         <select
           value={node.parameters?.model || "gpt-4o-mini"}
           onChange={(e) => handleParameterChange("model", e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input"
         >
           <option value="gpt-4o-mini">gpt-4o-mini</option>
           <option value="gpt-4o">gpt-4o</option>
@@ -88,15 +95,15 @@ export function AIAgentSettings({ node, onChange }: Props) {
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
           System Prompt
         </label>
         <textarea
           value={node.parameters?.prompt || ""}
           onChange={(e) => handleParameterChange("prompt", e.target.value)}
           rows={5}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input resize-none"
           placeholder="You are a helpful assistant…"
         />
       </div>

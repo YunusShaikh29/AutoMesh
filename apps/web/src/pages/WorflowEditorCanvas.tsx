@@ -18,16 +18,12 @@ import ReactFlow, {
   type OnEdgesChange,
   addEdge,
   applyEdgeChanges,
-  ReactFlowProvider,
-  useNodesState,
-  useEdgesState,
 } from "reactflow";
 import {
   ACTION_KIND,
   NODE_TYPE,
   TRIGGER_KIND,
   type nodeSchema,
-  type connectionSchema,
 } from "common/types";
 import { v4 as uuidv4 } from "uuid";
 import { CustomNode } from "../components/CustomNode";
@@ -342,73 +338,146 @@ const WorkflowEditorCanvas = () => {
     workflow?.nodes.find((n) => n.id === selectedNodeId) || null;
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-pulse-subtle w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)]">Loading workflow...</p>
+        </div>
+      </div>
+    );
   }
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="card">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="heading text-lg">Error Loading Workflow</h3>
+            <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!workflow) {
-    return <div>No workflow found</div>;
+    return (
+      <div className="card text-center py-12">
+        <div className="w-16 h-16 bg-[var(--color-accent)] dark:bg-[var(--color-border-dark)] rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <h3 className="heading text-xl mb-2">No workflow found</h3>
+        <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
+          The requested workflow could not be found
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          name="name"
-          value={workflow.name}
-          onChange={handleWorkflowNameChange}
-          className="text-sm font-semibold p-1 border border-gray-300 rounded w-22"
-          //   make input width fit to content
-        />
-        <div className="flex gap-1">
-          <button
-            onClick={handleSave}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleRunWorkflow}
-            className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
-          >
-            Run
-          </button>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="card">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              name="name"
+              value={workflow.name}
+              onChange={handleWorkflowNameChange}
+              className="heading text-2xl bg-transparent border-none outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 rounded px-2 py-1 -ml-2"
+              placeholder="Workflow Name"
+            />
+            <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-60 mt-1">
+              Build your automation workflow
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="button-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              Save
+            </button>
+            <button
+              onClick={handleRunWorkflow}
+              className="button-primary bg-[var(--color-success)] hover:bg-[var(--color-success)]/90 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z" />
+              </svg>
+              Run
+            </button>
+            <button
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="button-secondary flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              History
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Node Controls */}
+      <div className="card">
+        <h3 className="subheading mb-4">Add Nodes</h3>
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handleAddNode}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            className="button-secondary flex items-center gap-2"
           >
-            Webhook
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            Webhook Trigger
           </button>
           <button
             onClick={handleAddAIAgentNode}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            className="button-secondary flex items-center gap-2"
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
             AI Agent
           </button>
           <button
             onClick={handleAddEmailNode}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            className="button-secondary flex items-center gap-2"
           >
-            Email
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Send Email
           </button>
           <button
             onClick={handleAddTelegramNode}
-            className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            className="button-secondary flex items-center gap-2"
           >
-            Telegram
-          </button>
-          <button
-            onClick={() => setIsHistoryModalOpen(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mr-2"
-          >
-            History
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Send Telegram
           </button>
         </div>
       </div>
-      <div className="flex justify-center">
+
+      {/* React Flow Canvas */}
+      <div className="card p-0 overflow-hidden">
         <div className="h-[80vh] w-full">
           <ReactFlow
             nodes={rfNodes}
@@ -419,27 +488,37 @@ const WorkflowEditorCanvas = () => {
             onConnect={handleOnConnect}
             onEdgesChange={onEdgesChange}
             onPaneClick={handOnPaneClick}
-            className="border-2 border-gray-300"
+            className="border-0"
           >
-            <Background className="text-white bg-gray-900" />
-            <Controls />
+            <Background 
+              className="bg-[var(--color-accent)] dark:bg-[var(--color-bg-dark)]" 
+              color="var(--color-border)"
+              gap={20}
+            />
+            <Controls 
+              className="bg-[var(--color-bg)] dark:bg-[var(--color-bg-dark)] border border-[var(--color-border)] dark:border-[var(--color-border-dark)]"
+            />
           </ReactFlow>
         </div>
-        {selectedNode && (
-          <SettingsPanel
-            selectedNode={selectedNode}
-            onNodeChange={handleNodeChange}
-            workflowId={id || ""}
-          />
-        )}
-        {id && (
-          <ExecutionHistoryModal
-            workflowId={id || ""}
-            isOpen={isHistoryModalOpen}
-            onClose={() => setIsHistoryModalOpen(false)}
-          />
-        )}
       </div>
+
+      {/* Settings Panel */}
+      {selectedNode && (
+        <SettingsPanel
+          selectedNode={selectedNode}
+          onNodeChange={handleNodeChange}
+          workflowId={id || ""}
+        />
+      )}
+      
+      {/* Execution History Modal */}
+      {id && (
+        <ExecutionHistoryModal
+          workflowId={id || ""}
+          isOpen={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
