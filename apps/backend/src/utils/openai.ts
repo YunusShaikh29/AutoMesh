@@ -93,10 +93,11 @@ const tools = [
 async function openAIFunctionCall(input: string) {
   let messages = [
     { 
+      name: "system",
       role: "system", 
       content: "You are a helpful assistant that can call functions to perform calculations step by step. Use tools one at a time if results depend on previous steps." 
     },
-    { role: "user", content: input },
+    { name: "user", role: "user", content: input },
   ];
 
   const maxIterations = 10;  
@@ -104,7 +105,7 @@ async function openAIFunctionCall(input: string) {
     // Call API with current messages and tools
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages,
+      messages: messages as any,
       tools,
       max_completion_tokens: 1000,
     });
@@ -115,7 +116,7 @@ async function openAIFunctionCall(input: string) {
       return response;
     }
 
-    messages.push(message);
+    messages.push(message as any);
 
     if (!message.tool_calls || message.tool_calls.length === 0) {
       console.log("Final response:", message.content);
@@ -156,6 +157,7 @@ async function openAIFunctionCall(input: string) {
       });
     }
 
+    // @ts-ignore
     messages.push(...toolResponses);
   }
 

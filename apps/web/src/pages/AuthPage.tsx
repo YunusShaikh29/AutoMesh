@@ -66,11 +66,15 @@ const AuthPage = () => {
                 <h1 className="heading text-3xl">Check your inbox</h1>
                 <p className="text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-80">
                   We've sent a magic link to{" "}
-                  <span className="font-semibold text-[var(--color-primary)]">{email}</span>.
-                  Click the link to sign in.
+                  <span className="font-semibold text-[var(--color-primary)]">
+                    {email}
+                  </span>
+                  . Click the link to sign in.
                 </p>
                 <p className="text-sm text-[var(--color-text)] dark:text-[var(--color-text-dark)] opacity-60">
-                  (In development, the link is logged to your backend console.)
+                  {import.meta.env.DEV
+                    ? "In development, the link is logged to your backend console"
+                    : "If you don't see the email, please check your spam folder."}
                 </p>
               </div>
             </div>
@@ -85,7 +89,10 @@ const AuthPage = () => {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-[var(--color-text)] dark:text-[var(--color-text-dark)]"
+                  >
                     Email Address
                   </label>
                   <input
@@ -104,7 +111,9 @@ const AuthPage = () => {
 
                 {error && (
                   <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                      {error}
+                    </p>
                   </div>
                 )}
 

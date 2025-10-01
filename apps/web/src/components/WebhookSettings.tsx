@@ -7,9 +7,10 @@ interface Props {
   workflowId: any;
 }
 
+const baseUrl = import.meta.env.VITE_API_URL || "";
+
 export const WebhookSettings = ({ node, workflowId }: Props) => {
   const [selectedMethod, setSelectedMethod] = useState("POST");
-  const baseUrl = "http://localhost:8080";
   const webhookUrl = `${baseUrl}/webhook/handler/${workflowId}/${node.id}`;
 
   const httpMethods = [

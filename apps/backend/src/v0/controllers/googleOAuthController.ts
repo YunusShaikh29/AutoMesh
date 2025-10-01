@@ -11,7 +11,7 @@ export const googleOAuthConnect = (req: AuthRequest, res: Response) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID || "";
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "";
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "";  
 
     const oauth2Client = new OAuth2Client({
       client_id: clientId,

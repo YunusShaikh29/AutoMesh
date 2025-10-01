@@ -8,12 +8,14 @@ import { credentialsRouter } from './v0/routes/credentialsRoute';
 import { webhookRouter } from './v0/routes/webhookRouter';
 import {executionRouter} from "./v0/routes/executionRouter";
 import { googleOAuthRouter } from "./v0/routes/googleOAuth";
+import cors from 'cors';
 
 const app: Express = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(cookieParser())
+app.use(cors())
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello from the Express backend!');
