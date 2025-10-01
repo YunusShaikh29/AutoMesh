@@ -11,6 +11,9 @@ const target = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    outDir: 'build',
+  },
   server: {
     proxy: {
       '/api': {
