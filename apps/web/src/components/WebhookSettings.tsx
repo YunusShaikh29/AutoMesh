@@ -11,7 +11,7 @@ const baseUrl = import.meta.env.VITE_API_URL || "";
 
 export const WebhookSettings = ({ node, workflowId }: Props) => {
   const [selectedMethod, setSelectedMethod] = useState("POST");
-  const webhookUrl = `${baseUrl}/webhook/handler/${workflowId}/${node.id}`;
+  const webhookUrl = `${baseUrl}/api/v0/webhook/handler/${workflowId}/${node.id}`;
 
   const httpMethods = [
     { value: "GET", label: "GET", color: "text-green-500" },

@@ -24,7 +24,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/api/v0/auth', authRouter);
 app.use('/api/v0/workflows', workflowRouter);
 app.use('/api/v0/credentials', credentialsRouter);
-app.use('/webhook', webhookRouter);
+app.use('/api/v0/webhook', webhookRouter);
 app.use("/api/v0", executionRouter);
 app.use("/api/v0", googleOAuthRouter);
 
