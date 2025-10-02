@@ -34,6 +34,7 @@ export const googleOAuthConnect = (req: AuthRequest, res: Response) => {
       access_type: "offline",
       scope: scopes,
       include_granted_scopes: true,
+      prompt: "consent",
     });
 
     res.status(200).json({ url: authUrl });
